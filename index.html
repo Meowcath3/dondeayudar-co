@@ -196,6 +196,7 @@ const basePoints=[
 {city:'Colombia · internacional',name:'Fundación Colombia Luz y Sonrisas',address:'Donación por transferencia bancaria',accepts:'Donaciones económicas verificadas',whatsapp:'',instagram:'',donation:'',note:'Banco de Bogotá, cuenta de ahorros 125128462 · NIT 9020850963',verified:true,source:'https://www.bluradio.com/nacion/donde-donar-para-los-damnificados-por-el-terremoto-en-colombia-rg10'},
 {city:'Colombia · internacional',name:'Corporación Organización El Minuto de Dios',address:'Donación en línea o transferencia bancaria',accepts:'Donaciones económicas verificadas',whatsapp:'',instagram:'',donation:'https://www.minutodedios.org',note:'Davivienda, cuenta de ahorros 004000240970 · NIT 860.010.371-0',verified:true,source:'https://www.bluradio.com/nacion/donde-donar-para-los-damnificados-por-el-terremoto-en-colombia-rg10'},
 {city:'Bogotá',name:'IDPYBA — Punto de acopio Corferias',address:'Carrera 37 #24-67, entrada principal de Corferias (antiguas oficinas Davivienda)',accepts:'Alimentos y artículos para mascotas',whatsapp:'',instagram:'',donation:'',note:'Disponible del 13 al 17 de agosto, 10:00 a.m.–6:00 p.m. · No es necesario ingresar a ExpoPet 2026 para donar',verified:true,source:'https://bogota.gov.co/mi-ciudad/ambiente/corferias-sera-centro-de-acopio-ayuda-animales-afectados-terremoto'},
+{city:'Bogotá',name:'Parque La Colina — Centro de Acopio (Alcaldía de Suba)',address:'C.C. Parque La Colina, Sótano 1 (zona morada)',accepts:'Todo tipo de ayuda',whatsapp:'',instagram:'parquelacolinacc',donation:'',note:'Alianza con la Alcaldía de Suba. Disponible desde el viernes 14 de agosto, 9:00 a.m.–9:00 p.m.',verified:true,source:'https://instagram.com/parquelacolinacc'},
 {city:'Manizales',name:'Fundación Ángeles de la Calle',address:'Consulta el perfil de Instagram para coordinar la entrega',accepts:'Alimentos y artículos para mascotas',whatsapp:'',instagram:'angelesdelacallemanizales',donation:'',note:'Refugio con daños estructurales por el terremoto; necesitan alimento, medicamentos y agua potable para los animales',verified:false,source:'https://www.semana.com/4patas/articulo/terremoto-en-colombia-mascotas-desaparecidas-y-fundaciones-afectadas-piden-ayuda-tras-la-emergencia/202648/'},
 {city:'Bogotá',name:'Red ACSC/SCARE — Bogotá',address:'Carrera 15A #120-74',accepts:'Insumos médicos, medicamentos, kits de alimentos no perecederos, productos de aseo',whatsapp:'',instagram:'',donation:'',note:'Punto habilitado por la Asociación Colombiana de Sociedades Científicas',verified:true,source:'https://www.semana.com/salud/articulo/asociacion-colombiana-de-sociedades-cientificas-habilita-puntos-en-16-ciudades-para-recibir-ayudas-por-terremoto/202631/'},
 {city:'Bogotá',name:'Gobernación de Cundinamarca',address:'Plaza de la Paz',accepts:'Alimentos no perecederos, agua, aseo personal, ropa nueva, artículos para mascotas',whatsapp:'',instagram:'',donation:'',note:'Horario: 8:00 a.m.–5:00 p.m., del 11 al 23 de agosto',verified:true,source:'https://www.elespectador.com/bogota/donde-donar-para-los-afectados-por-el-terremoto-puntos-autorizados-en-bogota-y-cundinamarca/'},
@@ -233,14 +234,14 @@ const basePoints=[
   // point someone adds — so it still works, it just won't be shared with other visitors.
   const SUPABASE_URL = 'https://npbokcxlvlelbihodxcq.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wYm9rY3hsdmxlbGJpaG9keGNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1ODU5MDgsImV4cCI6MjEwMjE2MTkwOH0.Ckq5SHxN3kOhvwNDt5YpOcR7An7pUSkyQ13zJyXtjRU';
-  let supabase = null;
+  let supabaseClient = null;
   let usingSupabase = false;
   if (SUPABASE_URL && SUPABASE_ANON_KEY) {
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
     document.head.appendChild(script);
     script.onload = async () => {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       usingSupabase = true;
       await loadFromSupabase();
       await renderResources();
@@ -248,7 +249,7 @@ const basePoints=[
   }
   async function loadFromSupabase(){
     try{
-      const { data, error } = await supabase.from('points').select('*').order('created_at',{ascending:true});
+      const { data, error } = await supabaseClient.from('points').select('*').order('created_at',{ascending:true});
       if(error) throw error;
       points = data.map(row=>({...row}));
       [...new Set(points.map(p=>p.city))].sort((a,b)=>a.localeCompare(b,'es')).forEach(c=>{
@@ -261,9 +262,9 @@ const basePoints=[
   }
   async function renderResources(){
     const wrap = document.querySelector('#resources');
-    if(!wrap || !supabase) return;
+    if(!wrap || !supabaseClient) return;
     try{
-      const { data, error } = await supabase.from('resources').select('*').eq('active', true).order('sort_order', { ascending: true });
+      const { data, error } = await supabaseClient.from('resources').select('*').eq('active', true).order('sort_order', { ascending: true });
       if(error) throw error;
       wrap.innerHTML = data.map(r => `
         <article class="resource-card">
@@ -390,7 +391,7 @@ const basePoints=[
 
     if(usingSupabase){
       formMessage.className='form-message';formMessage.textContent='Guardando…';
-      const { error } = await supabase.from('points').insert([{...item, source_type:'community'}]);
+      const { error } = await supabaseClient.from('points').insert([{...item, source_type:'community'}]);
       if(error){
         formMessage.className='form-message';
         formMessage.textContent='No se pudo guardar. Revisa que no haya enlaces, usuarios ni datos de pago, e inténtalo de nuevo.';

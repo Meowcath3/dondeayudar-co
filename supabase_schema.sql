@@ -203,6 +203,7 @@ insert into public.points (city,name,address,accepts,whatsapp,instagram,donation
 ('Colombia · internacional','Fundación Colombia Luz y Sonrisas','Donación por transferencia bancaria','Donaciones económicas verificadas','','','','Banco de Bogotá, cuenta de ahorros 125128462 · NIT 9020850963',true,'https://www.bluradio.com/nacion/donde-donar-para-los-damnificados-por-el-terremoto-en-colombia-rg10','curated'),
 ('Colombia · internacional','Corporación Organización El Minuto de Dios','Donación en línea o transferencia bancaria','Donaciones económicas verificadas','','','https://www.minutodedios.org','Davivienda, cuenta de ahorros 004000240970 · NIT 860.010.371-0',true,'https://www.bluradio.com/nacion/donde-donar-para-los-damnificados-por-el-terremoto-en-colombia-rg10','curated'),
 ('Bogotá','IDPYBA — Punto de acopio Corferias','Carrera 37 #24-67, entrada principal de Corferias (antiguas oficinas Davivienda)','Alimentos y artículos para mascotas','','','','Disponible del 13 al 17 de agosto, 10:00 a.m.–6:00 p.m. · No es necesario ingresar a ExpoPet 2026 para donar',true,'https://bogota.gov.co/mi-ciudad/ambiente/corferias-sera-centro-de-acopio-ayuda-animales-afectados-terremoto','curated'),
+('Bogotá','Parque La Colina — Centro de Acopio (Alcaldía de Suba)','C.C. Parque La Colina, Sótano 1 (zona morada)','Todo tipo de ayuda','','parquelacolinacc','','Alianza con la Alcaldía de Suba. Disponible desde el viernes 14 de agosto, 9:00 a.m.–9:00 p.m.',true,'https://instagram.com/parquelacolinacc','curated'),
 ('Manizales','Fundación Ángeles de la Calle','Consulta el perfil de Instagram para coordinar la entrega','Alimentos y artículos para mascotas','','angelesdelacallemanizales','','Refugio con daños estructurales por el terremoto; necesitan alimento, medicamentos y agua potable para los animales',false,'https://www.semana.com/4patas/articulo/terremoto-en-colombia-mascotas-desaparecidas-y-fundaciones-afectadas-piden-ayuda-tras-la-emergencia/202648/','curated'),
 ('Bogotá','Red ACSC/SCARE — Bogotá','Carrera 15A #120-74','Insumos médicos, medicamentos, kits de alimentos no perecederos, productos de aseo','','','','Punto habilitado por la Asociación Colombiana de Sociedades Científicas',true,'https://www.semana.com/salud/articulo/asociacion-colombiana-de-sociedades-cientificas-habilita-puntos-en-16-ciudades-para-recibir-ayudas-por-terremoto/202631/','curated'),
 ('Bogotá','Gobernación de Cundinamarca','Plaza de la Paz','Alimentos no perecederos, agua, aseo personal, ropa nueva, artículos para mascotas','','','','Horario: 8:00 a.m.–5:00 p.m., del 11 al 23 de agosto',true,'https://www.elespectador.com/bogota/donde-donar-para-los-afectados-por-el-terremoto-puntos-autorizados-en-bogota-y-cundinamarca/','curated'),
@@ -233,3 +234,28 @@ insert into public.points (city,name,address,accepts,whatsapp,instagram,donation
 ('Valledupar','Centro de Solidaridad Valledupar','Carrera 23 #4-116, casa 14, conjunto residencial Callejas','Alimentos no perecederos, aseo, ropa, cobijas','','','','',true,'https://www.elpaisvallenato.com/en-el-cesar-abren-centros-de-acopio-para-ayudar-a-victimas-del-sismo/','curated'),
 ('San Diego (Cesar)','Punto de acopio San Diego','Carrera 13 #2F-85, urbanización Chiraimo','Alimentos no perecederos, aseo, ropa, cobijas','','','','',true,'https://www.elpaisvallenato.com/en-el-cesar-abren-centros-de-acopio-para-ayudar-a-victimas-del-sismo/','curated'),
 ('Maicao (La Guajira)','Casa de la Cultura de Maicao','Casa de la Cultura de Maicao','Alimentos no perecederos, aseo, ropa, cobijas','','','','Recepción de donaciones a partir de las 2:00 p.m.',true,'https://guajiranews.com/actualidad-politica/alcaldia-de-maicao-se-une-en-solidaridad-con-familias-afectadas-por-el-terremoto/','curated');
+-- ---- resources: featured aid offers (transport, connectivity, etc.), added via Claude Desktop ----
+create table if not exists public.resources (
+  id uuid primary key default gen_random_uuid(),
+  icon text not null default '',
+  title text not null,
+  description text not null,
+  cta_label text not null,
+  cta_type text not null check (cta_type in ('link','code')),
+  cta_value text not null,
+  source text not null default '',
+  active boolean not null default true,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.resources enable row level security;
+
+drop policy if exists "public can read active resources" on public.resources;
+create policy "public can read active resources" on public.resources for select using (active = true);
+
+-- No public insert/update/delete policy: resources are managed only via the dashboard/service key.
+
+insert into public.resources (icon,title,description,cta_label,cta_type,cta_value,source,active,sort_order) values
+('🚕','Transporte gratis a la Cruz Roja Bogotá','Cabify ofrece viajes sin costo con destino a El Campín o a la Sede Administrativa de la Cruz Roja Bogotá (Cra 24 #73-38), para llevar tus donaciones. Válido del 12 al 16 de agosto, de 8:00 a.m. a 5:00 p.m., hasta agotar existencias. Aplica en las categorías Promo, Taxi y Cabify de la app.','Código: CABIFYXTODOS','code','CABIFYXTODOS','https://instagram.com/prensalibre.col',true,1),
+('📶','eSIM gratis para comunicarte','BLINK eSIM, en colaboración con iKualo, ofrece 300 MB de datos móviles gratis para personas afectadas por el terremoto en Colombia — útil si te quedaste sin datos o si tu operador tiene fallas en tu zona. Se activa con tu número de celular.','Solicitar eSIM gratis','link','https://ikualo.blinkesim.com','https://ikualo.blinkesim.com',true,2);
