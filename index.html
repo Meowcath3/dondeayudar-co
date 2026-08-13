@@ -290,7 +290,7 @@ const basePoints=[
     materials:['material de construccion','materiales de construccion','materiales de reconstruccion','materiales',
       'cemento','ladrillo','ladrillos','teja','tejas','varilla','varillas','malla electrosoldada','estiba','estibas',
       'madera','tabla','tablas','zinc','lamina de zinc','laminas de zinc','viga','vigas','puntilla','puntillas',
-      'alambre','adobe','ceramica','baldosa','baldosas','tuberia','tuberias','tubo','tubos','drywall',
+      'alambre','adobe','ceramica','baldosa','baldosas','tuberia','tuberias','tubo','tubos','drywall','yeso',
       'reconstruccion','arena de rio','gravilla','triturado'],
     pets:['mascota','mascotas','animal','animales','perro','perros','gato','gatos','peludo','peludos',
       'peludito','peluditos','concentrado','correa','arnes','veterinario','collar','comida para perros','comida para gatos'],
@@ -306,7 +306,7 @@ const basePoints=[
   let mode='all',lang='es'; const query=document.querySelector('#query'),city=document.querySelector('#city'),cards=document.querySelector('#cards');
   [...new Set(points.map(p=>p.city))].sort((a,b)=>a.localeCompare(b,'es')).forEach(c=>city.insertAdjacentHTML('beforeend',`<option value="${c}">${c}</option>`));
 
-  function classify(p){const x=norm(`${p.name} ${p.accepts}`),acceptsBroad=/\btodo\b/.test(x),excludesPets=/todo menos (comida para mascotas|mascotas)/.test(x);const has=words=>acceptsBroad||words.some(w=>x.includes(w));return {pets:(acceptsBroad&&!excludesPets)||CATEGORY_WORDS.pets.some(w=>x.includes(w)),money:!!p.donation,food:has(CATEGORY_WORDS.food),hygiene:has(CATEGORY_WORDS.hygiene),goods:acceptsBroad||has(CATEGORY_WORDS.clothing)||has(CATEGORY_WORDS.tools),blood:CATEGORY_WORDS.blood.some(w=>x.includes(w)),materials:CATEGORY_WORDS.materials.some(w=>x.includes(w))}}
+  function classify(p){const x=norm(`${p.name} ${p.accepts}`),acceptsBroad=/\btodo\b/.test(x),excludesPets=/todo menos (comida para mascotas|mascotas)/.test(x);const has=words=>acceptsBroad||words.some(w=>x.includes(w));const clothing=has(CATEGORY_WORDS.clothing),tools=has(CATEGORY_WORDS.tools);return {pets:(acceptsBroad&&!excludesPets)||CATEGORY_WORDS.pets.some(w=>x.includes(w)),money:!!p.donation,food:has(CATEGORY_WORDS.food),hygiene:has(CATEGORY_WORDS.hygiene),clothing,tools,health:has(CATEGORY_WORDS.health),goods:acceptsBroad||clothing||tools,blood:CATEGORY_WORDS.blood.some(w=>x.includes(w)),materials:CATEGORY_WORDS.materials.some(w=>x.includes(w))}}
   function donationIntent(term){return /\b(dinero|plata|efectivo|donar dinero|aporte economico|cash|money|argent|geld|现金|捐款)\b/i.test(norm(term))}
 
   function score(p,term){
